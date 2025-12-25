@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <title>Schoology Grade Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Simple Schoology grade calculator. Calculate weighted grades instantly.">
-
+<meta name="description" content="Upload your Schoology CSV export and calculate your grades instantly. Safe, client-side, no login required.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
@@ -17,151 +16,131 @@
   --accent: #2563eb;
   --border: #e5e7eb;
 }
-
-* {
-  box-sizing: border-box;
-}
-
+* { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-}
-
-.container {
-  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   padding: 20px;
 }
-
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   background: var(--card);
   border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  padding: 28px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
 }
-
 h1 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  font-size: 1.5rem;
 }
-
 .subtitle {
   font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 20px;
 }
-
-label {
-  font-size: 0.85rem;
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+input:focus { outline: none; border-color: var(--accent); }
+button {
+  cursor: pointer;
+  border: none;
   font-weight: 500;
   margin-top: 14px;
-  display: block;
 }
-
-input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 6px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  font-size: 0.95rem;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-button {
-  width: 100%;
-  margin-top: 20px;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.95;
-}
-
+.primary { background: var(--accent); color: white; }
+.primary:hover { opacity: 0.95; }
 .result {
-  margin-top: 18px;
+  margin-top: 20px;
   padding: 14px;
   border-radius: 12px;
   background: #f1f5ff;
   font-size: 0.95rem;
-  text-align: center;
   display: none;
 }
-
 .footer {
   margin-top: 16px;
   font-size: 0.75rem;
   color: var(--muted);
   text-align: center;
 }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { padding: 8px; text-align: center; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; }
 </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="card">
-    <h1>Schoology Grade Calculator</h1>
-    <div class="subtitle">Simple weighted grade calculation</div>
+<div class="card">
+  <h1>Schoology Grade Calculator</h1>
+  <div class="subtitle">Upload your Schoology CSV export</div>
 
-    <label>Assignment Grade (%)</label>
-    <input type="number" id="grade" placeholder="e.g. 92">
+  <input type="file" id="csvFile" accept=".csv">
+  <button class="primary" onclick="processCSV()">Calculate Grades</button>
 
-    <label>Assignment Weight (%)</label>
-    <input type="number" id="weight" placeholder="e.g. 25">
-
-    <button onclick="calculate()">Calculate</button>
-
-    <div class="result" id="result"></div>
-
-    <div class="footer">
-      Not affiliated with Schoology
-    </div>
-  </div>
+  <div class="result" id="result"></div>
+  <div class="footer">Not affiliated with Schoology • Fully client-side</div>
 </div>
 
 <script>
-function calculate() {
-  const grade = parseFloat(document.getElementById("grade").value);
-  const weight = parseFloat(document.getElementById("weight").value);
+// Parse CSV
+function processCSV() {
+  const fileInput = document.getElementById("csvFile");
   const resultBox = document.getElementById("result");
+  resultBox.style.display = "none";
+  if (!fileInput.files.length) { alert("Please select a CSV file."); return; }
 
-  if (isNaN(grade) || isNaN(weight)) {
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+    if (rows.length < 2) { alert("CSV is empty or invalid."); return; }
+
+    // Assume first row is header, data starts from second row
+    let totalWeighted = 0, totalWeight = 0;
+    let tableHTML = "<table><tr><th>Assignment</th><th>Score</th><th>Max</th><th>Weight</th><th>Weighted</th></tr>";
+
+    rows.slice(1).forEach(row => {
+      const cols = row.split(",");
+      if (cols.length < 4) return; // skip invalid row
+      const name = cols[0];
+      const score = parseFloat(cols[1]);
+      const max = parseFloat(cols[2]);
+      const weight = parseFloat(cols[3]);
+      if (isNaN(score) || isNaN(max) || isNaN(weight)) return;
+
+      const percent = (score / max) * 100;
+      const weighted = (percent * weight) / 100;
+      totalWeighted += weighted;
+      totalWeight += weight;
+
+      tableHTML += `<tr><td>${name}</td><td>${score}</td><td>${max}</td><td>${weight}%</td><td>${weighted.toFixed(2)}%</td></tr>`;
+    });
+    tableHTML += "</table>";
+
+    let letter = "F";
+    if (totalWeighted >= 90) letter = "A";
+    else if (totalWeighted >= 80) letter = "B";
+    else if (totalWeighted >= 70) letter = "C";
+    else if (totalWeighted >= 60) letter = "D";
+
+    resultBox.innerHTML = `<strong>Total Weighted Grade:</strong> ${totalWeighted.toFixed(2)}%<br><strong>Letter Grade:</strong> ${letter}${tableHTML}`;
     resultBox.style.display = "block";
-    resultBox.innerHTML = "Please enter valid numbers.";
-    return;
-  }
-
-  const weighted = (grade * weight) / 100;
-
-  let letter = "F";
-  if (grade >= 90) letter = "A";
-  else if (grade >= 80) letter = "B";
-  else if (grade >= 70) letter = "C";
-  else if (grade >= 60) letter = "D";
-
-  resultBox.style.display = "block";
-  resultBox.innerHTML = `
-    <strong>Weighted Contribution:</strong> ${weighted.toFixed(2)}%<br>
-    <strong>Letter Grade:</strong> ${letter}
-  `;
+  };
+  reader.readAsText(file);
 }
 </script>
 </body>
