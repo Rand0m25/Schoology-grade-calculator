@@ -4,88 +4,164 @@
 <meta charset="UTF-8">
 <title>Schoology Grade Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Free Schoology grade calculator. Calculate your final grade easily. No login, no signup.">
+<meta name="description" content="Simple Schoology grade calculator. Calculate weighted grades instantly.">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --border: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 20px;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
+
 .container {
-    max-width: 500px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+}
+
 h1 {
-    text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 14px;
+  display: block;
+}
+
 input {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
 }
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 button {
-    width: 100%;
-    padding: 12px;
-    background: #1e88e5;
-    color: white;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
 }
+
+button:hover {
+  opacity: 0.95;
+}
+
 .result {
-    margin-top: 15px;
-    font-size: 18px;
-    text-align: center;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f1f5ff;
+  font-size: 0.95rem;
+  text-align: center;
+  display: none;
 }
-.note {
-    font-size: 12px;
-    color: gray;
-    margin-top: 10px;
+
+.footer {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-<h1>Schoology Grade Calculator</h1>
+  <div class="card">
+    <h1>Schoology Grade Calculator</h1>
+    <div class="subtitle">Simple weighted grade calculation</div>
 
-<label>Assignment Grade (%)</label>
-<input type="number" id="grade" placeholder="e.g. 85">
+    <label>Assignment Grade (%)</label>
+    <input type="number" id="grade" placeholder="e.g. 92">
 
-<label>Assignment Weight (%)</label>
-<input type="number" id="weight" placeholder="e.g. 20">
+    <label>Assignment Weight (%)</label>
+    <input type="number" id="weight" placeholder="e.g. 25">
 
-<button onclick="calculate()">Calculate</button>
+    <button onclick="calculate()">Calculate</button>
 
-<div class="result" id="result"></div>
+    <div class="result" id="result"></div>
 
-<p class="note">This tool is not affiliated with Schoology.</p>
+    <div class="footer">
+      Not affiliated with Schoology
+    </div>
+  </div>
 </div>
 
 <script>
 function calculate() {
-    const grade = parseFloat(document.getElementById("grade").value);
-    const weight = parseFloat(document.getElementById("weight").value);
+  const grade = parseFloat(document.getElementById("grade").value);
+  const weight = parseFloat(document.getElementById("weight").value);
+  const resultBox = document.getElementById("result");
 
-    if (isNaN(grade) || isNaN(weight)) {
-        document.getElementById("result").innerHTML = "Please enter valid numbers.";
-        return;
-    }
+  if (isNaN(grade) || isNaN(weight)) {
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "Please enter valid numbers.";
+    return;
+  }
 
-    const weightedScore = (grade * weight) / 100;
+  const weighted = (grade * weight) / 100;
 
-    let letter = "F";
-    if (grade >= 90) letter = "A";
-    else if (grade >= 80) letter = "B";
-    else if (grade >= 70) letter = "C";
-    else if (grade >= 60) letter = "D";
+  let letter = "F";
+  if (grade >= 90) letter = "A";
+  else if (grade >= 80) letter = "B";
+  else if (grade >= 70) letter = "C";
+  else if (grade >= 60) letter = "D";
 
-    document.getElementById("result").innerHTML =
-        `Weighted Contribution: <strong>${weightedScore.toFixed(2)}%</strong><br>
-         Letter Grade: <strong>${letter}</strong>`;
+  resultBox.style.display = "block";
+  resultBox.innerHTML = `
+    <strong>Weighted Contribution:</strong> ${weighted.toFixed(2)}%<br>
+    <strong>Letter Grade:</strong> ${letter}
+  `;
 }
 </script>
 </body>
